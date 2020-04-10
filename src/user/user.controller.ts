@@ -9,6 +9,7 @@ import {
     Param,
     NotFoundException,
     UseGuards,
+    UseFilters,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as Yup from 'yup';
@@ -17,6 +18,8 @@ import { UserService } from './user.service';
 import { User } from './user.entity';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { ValidationExceptionFilter } from '../helper/filter/validation-exception.filter';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -24,6 +27,7 @@ export class UserController {
 
     @Post()
     @UseInterceptors(ClassSerializerInterceptor)
+    @UseFilters(ValidationExceptionFilter)
     async store(@Body() createUserDTO: CreateUserDTO) {
         const schemaValidation = Yup.object().shape({
             name: Yup.string().required(),
@@ -33,13 +37,9 @@ export class UserController {
                 .min(6),
         });
 
-        try {
-            await schemaValidation.validate(createUserDTO, {
-                abortEarly: false,
-            });
-        } catch (err) {
-            throw new BadRequestException(err);
-        }
+        await schemaValidation.validate(createUserDTO, {
+            abortEarly: false,
+        });
 
         const userDb = await this.userService.findByLogin(createUserDTO.login);
 
@@ -55,8 +55,9 @@ export class UserController {
         return await this.userService.save(user);
     }
 
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(JwtAuthGuard)
     @Put(':id')
+    @UseFilters(ValidationExceptionFilter)
     async update(
         @Param('id') id: string,
         @Body() updateUserDTO: UpdateUserDTO,
@@ -66,13 +67,9 @@ export class UserController {
             login: Yup.string().required(),
         });
 
-        try {
-            await schemaValidation.validate(updateUserDTO, {
-                abortEarly: false,
-            });
-        } catch (err) {
-            throw new BadRequestException(err);
-        }
+        await schemaValidation.validate(updateUserDTO, {
+            abortEarly: false,
+        });
 
         const userDb = await this.userService.findById(id);
 
