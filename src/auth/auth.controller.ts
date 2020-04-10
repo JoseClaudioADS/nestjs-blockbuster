@@ -4,9 +4,12 @@ import {
     UseGuards,
     HttpCode,
     HttpStatus,
+    Req,
+    Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
+import { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +18,8 @@ export class AuthController {
     @UseGuards(AuthGuard('local'))
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    login() {
-        return 'TUDO OK';
+    login(@Req() req: Request, @Res() res: Response) {
+        const token = this.authService.login(req.user);
+        res.json(token).send();
     }
 }
