@@ -10,6 +10,10 @@ export class UserService {
         private readonly userRepository: Repository<User>,
     ) {}
 
+    findByLogin(login: string): Promise<User> {
+        return this.userRepository.findOne({ where: { login } });
+    }
+
     save(user: User): Promise<User> {
         return this.userRepository.save(user);
     }
