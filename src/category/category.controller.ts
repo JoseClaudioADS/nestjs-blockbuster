@@ -11,6 +11,12 @@ import {
     Param,
     NotFoundException,
     Delete,
+    UseInterceptors,
+    CacheInterceptor,
+    CacheTTL,
+    CacheKey,
+    Inject,
+    CACHE_MANAGER,
 } from '@nestjs/common';
 import * as Yup from 'yup';
 import { CategoryService } from './category.service';
@@ -25,8 +31,14 @@ export class CategoryController {
         name: Yup.string().required(),
     });
 
-    constructor(private categoryService: CategoryService) {}
+    constructor(
+        private categoryService: CategoryService,
+        @Inject(CACHE_MANAGER) private cacheManager,
+    ) {}
 
+    @UseInterceptors(CacheInterceptor)
+    @CacheTTL(20)
+    @CacheKey('categorias')
     @UseGuards(JwtAuthGuard)
     @Get()
     async index() {
@@ -42,6 +54,10 @@ export class CategoryController {
 
         const category = new Category();
         Object.assign(category, createCategoryDTO);
+
+        this.cacheManager.del('categorias', () => {
+            console.log('Cache clear');
+        });
 
         return await this.categoryService.save(category);
     }

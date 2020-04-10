@@ -17,6 +17,7 @@ import { CategoryModule } from './category/category.module';
             database: 'blockbuster',
             autoLoadEntities: true,
             synchronize: true,
+            logging: true,
         }),
         UserModule,
         AuthModule,
