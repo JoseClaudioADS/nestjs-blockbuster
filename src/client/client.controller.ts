@@ -5,6 +5,10 @@ import {
     Body,
     UseFilters,
     NotFoundException,
+    Put,
+    Param,
+    BadRequestException,
+    Get,
 } from '@nestjs/common';
 import * as Yup from 'yup';
 import { ClientService } from './client.service';
@@ -34,6 +38,11 @@ export class ClientController {
         private readonly fileService: FileService,
     ) {}
 
+    @Get()
+    async index() {
+        return this.clientService.findAll();
+    }
+
     @UseGuards(JwtAuthGuard)
     @Post()
     @UseFilters(ValidationExceptionFilter)
@@ -42,6 +51,7 @@ export class ClientController {
             abortEarly: false,
         });
 
+        await this.checkEmail(createClientDTO);
         const photo = await this.findAndCheckPhoto(createClientDTO.photoId);
 
         const client = new Client();
@@ -49,6 +59,32 @@ export class ClientController {
         client.photo = photo;
 
         return await this.clientService.save(client);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put(':id')
+    @UseFilters(ValidationExceptionFilter)
+    async update(
+        @Param('id') id: string,
+        @Body() createClientDTO: CreateUpdateClientDTO,
+    ) {
+        const clientDb = await this.clientService.findById(id);
+
+        if (!clientDb) {
+            throw new NotFoundException();
+        }
+
+        await this.schemaValidation.validate(createClientDTO, {
+            abortEarly: false,
+        });
+
+        await this.checkEmail(createClientDTO, id);
+        const photo = await this.findAndCheckPhoto(createClientDTO.photoId);
+
+        Object.assign(clientDb, createClientDTO);
+        clientDb.photo = photo;
+
+        return await this.clientService.save(clientDb);
     }
 
     async findAndCheckPhoto(id: string) {
@@ -59,5 +95,17 @@ export class ClientController {
         }
 
         return fileDb;
+    }
+
+    async checkEmail(dto: CreateUpdateClientDTO, id?: string) {
+        const { email } = dto;
+
+        const client = await this.clientService.findByEmail(email);
+
+        if (client && (!id || id != client.id)) {
+            throw new BadRequestException({
+                error: 'Email already used by another client',
+            });
+        }
     }
 }
