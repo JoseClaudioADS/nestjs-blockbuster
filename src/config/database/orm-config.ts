@@ -11,8 +11,9 @@ const config: ConnectionOptions = {
     database: process.env.DB_DATABASE,
     entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
     synchronize: false,
-    migrationsRun: false,
     logging: Boolean(Number(process.env.DB_LOGGING)),
+
+    migrationsRun: false,
     migrationsTableName: 'migrations',
 
     migrations: [__dirname + '/../../migrations/**/*{.ts,.js}'],
