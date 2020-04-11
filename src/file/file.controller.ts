@@ -7,6 +7,8 @@ import {
     Delete,
     Param,
     NotFoundException,
+    Get,
+    Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'fs';
@@ -24,12 +26,22 @@ export class FileController {
     ) {}
 
     @UseGuards(JwtAuthGuard)
+    @Get()
+    async index() {
+        return this.fileService.findAll();
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Post()
     @UseInterceptors(FileInterceptor('file'))
-    async store(@UploadedFile() uploadFile) {
+    async store(
+        @UploadedFile() uploadFile,
+        @Body('description') description: string,
+    ) {
         const file = new File();
 
         file.name = uploadFile.filename;
+        file.description = description;
 
         return await this.fileService.save(file);
     }

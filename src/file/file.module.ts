@@ -33,5 +33,6 @@ import { extname } from 'path';
     ],
     providers: [FileService],
     controllers: [FileController],
+    exports: [FileService],
 })
 export class FileModule {}

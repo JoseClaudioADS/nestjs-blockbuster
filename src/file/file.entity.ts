@@ -6,4 +6,6 @@ export class File {
     id: string;
     @Column()
     name: string;
+    @Column()
+    description: string;
 }

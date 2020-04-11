@@ -10,6 +10,10 @@ export class FileService {
         private readonly fileRepository: Repository<File>,
     ) {}
 
+    findAll(): Promise<File[]> {
+        return this.fileRepository.find({});
+    }
+
     findById(id: string): Promise<File> {
         return this.fileRepository.findOne(id);
     }
