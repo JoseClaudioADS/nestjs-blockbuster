@@ -10,7 +10,6 @@ import {
     BadRequestException,
     Get,
     Query,
-    Req,
     Delete,
 } from '@nestjs/common';
 import * as Yup from 'yup';
@@ -21,7 +20,6 @@ import { ValidationExceptionFilter } from '../helper/filter/validation-exception
 import { Client } from './client.entity';
 import { FileService } from '../file/file.service';
 import { SearchClientDTO } from './dto/search-client.dto';
-import { Request } from 'express';
 
 @Controller('client')
 export class ClientController {
