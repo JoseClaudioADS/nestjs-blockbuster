@@ -9,6 +9,9 @@ import {
     Param,
     BadRequestException,
     Get,
+    Query,
+    Req,
+    Delete,
 } from '@nestjs/common';
 import * as Yup from 'yup';
 import { ClientService } from './client.service';
@@ -17,6 +20,8 @@ import { CreateUpdateClientDTO } from './dto/create-update-client.dto';
 import { ValidationExceptionFilter } from '../helper/filter/validation-exception.filter';
 import { Client } from './client.entity';
 import { FileService } from '../file/file.service';
+import { SearchClientDTO } from './dto/search-client.dto';
+import { Request } from 'express';
 
 @Controller('client')
 export class ClientController {
@@ -38,9 +43,16 @@ export class ClientController {
         private readonly fileService: FileService,
     ) {}
 
+    @UseGuards(JwtAuthGuard)
     @Get()
-    async index() {
-        return this.clientService.findAll();
+    async index(@Query() searchClientDTO: SearchClientDTO) {
+        return this.clientService.findAll(searchClientDTO);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get(':id')
+    async show(@Param('id') id: string) {
+        return this.clientService.show(id);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -68,11 +80,7 @@ export class ClientController {
         @Param('id') id: string,
         @Body() createClientDTO: CreateUpdateClientDTO,
     ) {
-        const clientDb = await this.clientService.findById(id);
-
-        if (!clientDb) {
-            throw new NotFoundException();
-        }
+        const clientDb = await this.findAndCheckClient(id);
 
         await this.schemaValidation.validate(createClientDTO, {
             abortEarly: false,
@@ -85,6 +93,16 @@ export class ClientController {
         clientDb.photo = photo;
 
         return await this.clientService.save(clientDb);
+    }
+
+    async findAndCheckClient(id: string) {
+        const clientDb = await this.clientService.findById(id);
+
+        if (!clientDb) {
+            throw new NotFoundException();
+        }
+
+        return clientDb;
     }
 
     async findAndCheckPhoto(id: string) {
@@ -107,5 +125,13 @@ export class ClientController {
                 error: 'Email already used by another client',
             });
         }
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id')
+    async destroy(@Param('id') id: string) {
+        const clientDb = await this.findAndCheckClient(id);
+
+        return await this.clientService.delete(clientDb);
     }
 }
