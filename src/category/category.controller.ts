@@ -54,7 +54,6 @@ export class CategoryController {
 
         const category = new Category();
         Object.assign(category, createCategoryDTO);
-
         this.cacheManager.del('categorias', () => {
             console.log('Cache clear');
         });
@@ -70,10 +69,12 @@ export class CategoryController {
         @Body() updateCategoryDTO: CreateUpdateCategoryDTO,
     ) {
         await this.schemaValidation.validate(updateCategoryDTO);
-
         const categoryDb = await this.findAndCheckCategory(id);
-
         Object.assign(categoryDb, updateCategoryDTO);
+
+        this.cacheManager.del('categorias', () => {
+            console.log('Cache clear');
+        });
 
         await this.categoryService.save(categoryDb);
     }
