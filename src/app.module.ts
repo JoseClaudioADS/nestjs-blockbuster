@@ -8,6 +8,7 @@ import { CategoryModule } from './category/category.module';
 import { DatabaseModule } from './config/database/database.module';
 import { FileModule } from './file/file.module';
 import { ClientModule } from './client/client.module';
+import { MovieModule } from './movie/movie.module';
 
 @Module({
     imports: [
@@ -21,6 +22,7 @@ import { ClientModule } from './client/client.module';
         CategoryModule,
         FileModule,
         ClientModule,
+        MovieModule,
     ],
     controllers: [AppController],
     providers: [AppService],
