@@ -5,6 +5,8 @@ import {
     UseFilters,
     Body,
     NotFoundException,
+    Get,
+    Query,
 } from '@nestjs/common';
 import * as Yup from 'yup';
 import { MovieService } from './movie.service';
@@ -15,6 +17,7 @@ import { CategoryService } from '../category/category.service';
 import { FileService } from '../file/file.service';
 import { Movie } from './movie.entity';
 import { FindCheckHelper } from '../shared/find-check.helper';
+import { SearchMovieDTO } from './dto/search-movie.dto';
 
 @Controller('movie')
 export class MovieController {
@@ -30,6 +33,16 @@ export class MovieController {
         private readonly movieService: MovieService,
         private readonly findCheckHelper: FindCheckHelper,
     ) {}
+
+    @UseGuards(JwtAuthGuard)
+    @Get()
+    async index(@Query() searchMovieDTO: SearchMovieDTO) {
+        const result = await this.movieService.search(searchMovieDTO);
+
+        const [values, count] = result;
+
+        return { content: values, count };
+    }
 
     @UseGuards(JwtAuthGuard)
     @Post()
