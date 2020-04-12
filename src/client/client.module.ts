@@ -3,10 +3,10 @@ import { ClientController } from './client.controller';
 import { ClientService } from './client.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Client } from './client.entity';
-import { FileModule } from '../file/file.module';
+import { SharedModule } from '../shared/shared.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Client]), FileModule],
+    imports: [TypeOrmModule.forFeature([Client]), SharedModule],
     controllers: [ClientController],
     providers: [ClientService],
 })

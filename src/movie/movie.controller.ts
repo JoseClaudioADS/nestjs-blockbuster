@@ -14,6 +14,7 @@ import { CreateUpdateMovieDTO } from './dto/create-update-movie.dto';
 import { CategoryService } from '../category/category.service';
 import { FileService } from '../file/file.service';
 import { Movie } from './movie.entity';
+import { FindCheckHelper } from '../shared/find-check.helper';
 
 @Controller('movie')
 export class MovieController {
@@ -27,8 +28,7 @@ export class MovieController {
 
     constructor(
         private readonly movieService: MovieService,
-        private readonly categoryService: CategoryService,
-        private readonly fileService: FileService,
+        private readonly findCheckHelper: FindCheckHelper,
     ) {}
 
     @UseGuards(JwtAuthGuard)
@@ -39,9 +39,13 @@ export class MovieController {
             abortEarly: false,
         });
 
-        const photo = await this.findAndCheckPhoto(createMovieDTO.photoId);
-        const category = await this.findAndCheckCategory(
+        const photo = await this.findCheckHelper.findAndCheckFile(
+            createMovieDTO.photoId,
+            'Photo not found',
+        );
+        const category = await this.findCheckHelper.findAndCheckCategory(
             createMovieDTO.categoryId,
+            'Category not found',
         );
 
         const movie = new Movie();
@@ -50,25 +54,5 @@ export class MovieController {
         movie.category = category;
 
         return await this.movieService.save(movie);
-    }
-
-    async findAndCheckCategory(id: string) {
-        const categoryDb = await this.categoryService.findById(id);
-
-        if (!categoryDb) {
-            throw new NotFoundException('Category not found');
-        }
-
-        return categoryDb;
-    }
-
-    async findAndCheckPhoto(id: string) {
-        const fileDb = await this.fileService.findById(id);
-
-        if (!fileDb) {
-            throw new NotFoundException('Photo not found');
-        }
-
-        return fileDb;
     }
 }

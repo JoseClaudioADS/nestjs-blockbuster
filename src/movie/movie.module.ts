@@ -3,11 +3,10 @@ import { MovieController } from './movie.controller';
 import { MovieService } from './movie.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Movie } from './movie.entity';
-import { FileModule } from '../file/file.module';
-import { CategoryModule } from '../category/category.module';
+import { SharedModule } from '../shared/shared.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Movie]), FileModule, CategoryModule],
+    imports: [TypeOrmModule.forFeature([Movie]), SharedModule],
     controllers: [MovieController],
     providers: [MovieService],
 })

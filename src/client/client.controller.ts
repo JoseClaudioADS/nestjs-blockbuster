@@ -20,6 +20,7 @@ import { ValidationExceptionFilter } from '../helper/filter/validation-exception
 import { Client } from './client.entity';
 import { FileService } from '../file/file.service';
 import { SearchClientDTO } from './dto/search-client.dto';
+import { FindCheckHelper } from '../shared/find-check.helper';
 
 @Controller('client')
 export class ClientController {
@@ -38,7 +39,7 @@ export class ClientController {
 
     constructor(
         private readonly clientService: ClientService,
-        private readonly fileService: FileService,
+        private readonly findCheckHelper: FindCheckHelper,
     ) {}
 
     @UseGuards(JwtAuthGuard)
@@ -62,7 +63,10 @@ export class ClientController {
         });
 
         await this.checkEmail(createClientDTO);
-        const photo = await this.findAndCheckPhoto(createClientDTO.photoId);
+        const photo = await this.findCheckHelper.findAndCheckFile(
+            createClientDTO.photoId,
+            'Photo not found',
+        );
 
         const client = new Client();
         Object.assign(client, createClientDTO);
@@ -85,7 +89,10 @@ export class ClientController {
         });
 
         await this.checkEmail(createClientDTO, id);
-        const photo = await this.findAndCheckPhoto(createClientDTO.photoId);
+        const photo = await this.findCheckHelper.findAndCheckFile(
+            createClientDTO.photoId,
+            'Photo not found',
+        );
 
         Object.assign(clientDb, createClientDTO);
         clientDb.photo = photo;
@@ -101,16 +108,6 @@ export class ClientController {
         }
 
         return clientDb;
-    }
-
-    async findAndCheckPhoto(id: string) {
-        const fileDb = await this.fileService.findById(id);
-
-        if (!fileDb) {
-            throw new NotFoundException('Photo not found');
-        }
-
-        return fileDb;
     }
 
     async checkEmail(dto: CreateUpdateClientDTO, id?: string) {

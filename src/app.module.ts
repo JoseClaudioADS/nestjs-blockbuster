@@ -9,6 +9,7 @@ import { DatabaseModule } from './config/database/database.module';
 import { FileModule } from './file/file.module';
 import { ClientModule } from './client/client.module';
 import { MovieModule } from './movie/movie.module';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { MovieModule } from './movie/movie.module';
             envFilePath: process.env.STAGE == 'test' ? '.test.env' : '.env',
         }),
         DatabaseModule,
+        SharedModule,
         UserModule,
         AuthModule,
         CategoryModule,
