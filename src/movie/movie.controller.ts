@@ -7,6 +7,9 @@ import {
     NotFoundException,
     Get,
     Query,
+    Put,
+    Param,
+    Delete,
 } from '@nestjs/common';
 import * as Yup from 'yup';
 import { MovieService } from './movie.service';
@@ -67,5 +70,42 @@ export class MovieController {
         movie.category = category;
 
         return await this.movieService.save(movie);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Put(':id')
+    @UseFilters(ValidationExceptionFilter)
+    async update(
+        @Param('id') id: string,
+        @Body() createMovieDTO: CreateUpdateMovieDTO,
+    ) {
+        const movieDb = await this.findCheckHelper.findAndCheckMovie(id);
+
+        await this.schemaValidation.validate(createMovieDTO, {
+            abortEarly: false,
+        });
+
+        const photo = await this.findCheckHelper.findAndCheckFile(
+            createMovieDTO.photoId,
+            'Photo not found',
+        );
+        const category = await this.findCheckHelper.findAndCheckCategory(
+            createMovieDTO.categoryId,
+            'Category not found',
+        );
+
+        Object.assign(movieDb, createMovieDTO);
+        movieDb.photo = photo;
+        movieDb.category = category;
+
+        return await this.movieService.save(movieDb);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id')
+    async destroy(@Param('id') id: string) {
+        const movieDb = await this.findCheckHelper.findAndCheckMovie(id);
+
+        return await this.movieService.delete(movieDb);
     }
 }

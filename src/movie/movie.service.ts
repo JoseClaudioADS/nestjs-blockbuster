@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Movie } from './movie.entity';
-import { Repository } from 'typeorm';
+import { Repository, DeleteResult } from 'typeorm';
 import { SearchMovieDTO } from './dto/search-movie.dto';
 
 @Injectable()
@@ -42,5 +42,13 @@ export class MovieService {
 
     save(movie: Movie): Promise<Movie> {
         return this.movieRepository.save(movie);
+    }
+
+    findById(id: string): Promise<Movie> {
+        return this.movieRepository.findOne(id);
+    }
+
+    delete(movie: Movie): Promise<DeleteResult> {
+        return this.movieRepository.delete(movie.id);
     }
 }
