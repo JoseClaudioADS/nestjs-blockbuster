@@ -10,6 +10,7 @@ import { FileModule } from './file/file.module';
 import { ClientModule } from './client/client.module';
 import { MovieModule } from './movie/movie.module';
 import { SharedModule } from './shared/shared.module';
+import { ReservationModule } from './reservation/reservation.module';
 
 @Module({
     imports: [
@@ -25,6 +26,7 @@ import { SharedModule } from './shared/shared.module';
         FileModule,
         ClientModule,
         MovieModule,
+        ReservationModule,
     ],
     controllers: [AppController],
     providers: [AppService],

@@ -42,7 +42,7 @@ export class CategoryController {
     @UseGuards(JwtAuthGuard)
     @Get()
     async index() {
-        return await this.categoryService.findAll()[10].oasnodinosnodiion;
+        return await this.categoryService.findAll();
     }
 
     @UseGuards(JwtAuthGuard)
