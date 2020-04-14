@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Reservation } from './reservation.entity';
 import { Repository, Brackets } from 'typeorm';
+import { SearchReservationDTO } from './dto/search-reservation.dto';
 
 @Injectable()
 export class ReservationService {
@@ -9,6 +10,38 @@ export class ReservationService {
         @InjectRepository(Reservation)
         private readonly reservationRepository: Repository<Reservation>,
     ) {}
+
+    search(searchReservationDTO: SearchReservationDTO) {
+        const { clientName, movieTitle, startDate } = searchReservationDTO;
+
+        const page = searchReservationDTO.page || 0;
+        const size = searchReservationDTO.size || 10;
+
+        const qb = this.reservationRepository.createQueryBuilder('reservation');
+        qb.innerJoinAndSelect('reservation.movies', 'movie');
+        qb.innerJoinAndSelect('reservation.client', 'client');
+
+        if (movieTitle) {
+            qb.andWhere('movie.title ilike :title', {
+                title: `%${movieTitle}%`,
+            });
+        }
+
+        if (clientName) {
+            qb.andWhere('client.name ilike :name', { name: `%${clientName}%` });
+        }
+
+        if (startDate) {
+            qb.andWhere('reservation.start >= :startDate', { startDate });
+        }
+
+        qb.orderBy('client.name');
+
+        qb.skip(page * size);
+        qb.take(size);
+
+        return qb.getManyAndCount();
+    }
 
     save(reservation: Reservation): Promise<Reservation> {
         return this.reservationRepository.save(reservation);

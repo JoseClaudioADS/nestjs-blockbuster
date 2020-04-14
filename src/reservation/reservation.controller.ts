@@ -5,6 +5,8 @@ import {
     UseFilters,
     Body,
     BadRequestException,
+    Get,
+    Query,
 } from '@nestjs/common';
 import * as Yup from 'yup';
 import * as dayjs from 'dayjs';
@@ -15,9 +17,9 @@ import { CreateReservationDTO } from './dto/create-reservation.dto';
 import { Reservation } from './reservation.entity';
 import { FindCheckHelper } from '../shared/find-check.helper';
 import { Movie } from '../movie/movie.entity';
-import { MailService } from '../mail/mail.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { SearchReservationDTO } from './dto/search-reservation.dto';
 
 @Controller('reservation')
 export class ReservationController {
@@ -26,6 +28,12 @@ export class ReservationController {
         private readonly findCheckHelper: FindCheckHelper,
         @InjectQueue('reservations') private readonly reservationsQueue: Queue,
     ) {}
+
+    @UseGuards(JwtAuthGuard)
+    @Get()
+    async index(@Query() searchReservationDTO: SearchReservationDTO) {
+        return await this.reservationService.search(searchReservationDTO);
+    }
 
     @UseGuards(JwtAuthGuard)
     @Post()
