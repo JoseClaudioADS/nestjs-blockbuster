@@ -1,5 +1,13 @@
-import { Controller, Post, UseGuards, UseFilters, Body } from '@nestjs/common';
+import {
+    Controller,
+    Post,
+    UseGuards,
+    UseFilters,
+    Body,
+    BadRequestException,
+} from '@nestjs/common';
 import * as Yup from 'yup';
+import * as dayjs from 'dayjs';
 import { ReservationService } from './reservation.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ValidationExceptionFilter } from '../helper/filter/validation-exception.filter';
@@ -30,6 +38,8 @@ export class ReservationController {
             abortEarly: false,
         });
 
+        this.validateStartEndDates(createReservationDTO);
+
         const reservation = new Reservation();
         reservation.start = createReservationDTO.start;
         reservation.end = createReservationDTO.end;
@@ -40,6 +50,8 @@ export class ReservationController {
         reservation.movies = await this.findAndCheckMovies(
             createReservationDTO.moviesId,
         );
+
+        await this.checkStockMovies(reservation);
 
         return await this.reservationService.save(reservation);
     }
@@ -52,5 +64,45 @@ export class ReservationController {
         }
 
         return movies;
+    }
+
+    validateStartEndDates(createReservationDTO: CreateReservationDTO) {
+        const { start, end } = createReservationDTO;
+
+        const startDay = dayjs(start);
+        const endDay = dayjs(end);
+        const today = dayjs();
+
+        if (startDay.isBefore(today)) {
+            throw new BadRequestException('Start date is before today');
+        }
+
+        if (endDay.isBefore(today)) {
+            throw new BadRequestException('End date is before today');
+        }
+
+        if (startDay.isAfter(end)) {
+            throw new BadRequestException('Start date is after end date');
+        }
+    }
+
+    async checkStockMovies(reservation: Reservation) {
+        const { movies } = reservation;
+
+        const results = await this.reservationService.findMovieReservations(
+            reservation,
+        );
+
+        if (results && results.length > 0) {
+            movies.forEach(movie => {
+                const result = results.filter(r => r.movie_id === movie.id)[0];
+
+                if (Boolean(result.nonstock)) {
+                    throw new BadRequestException(
+                        `Movie ${movie.title} has no stock`,
+                    );
+                }
+            });
+        }
     }
 }
