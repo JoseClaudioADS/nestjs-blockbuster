@@ -11,6 +11,7 @@ import { ClientModule } from './client/client.module';
 import { MovieModule } from './movie/movie.module';
 import { SharedModule } from './shared/shared.module';
 import { ReservationModule } from './reservation/reservation.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { ReservationModule } from './reservation/reservation.module';
         }),
         DatabaseModule,
         SharedModule,
+        MailModule,
         UserModule,
         AuthModule,
         CategoryModule,

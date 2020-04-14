@@ -15,12 +15,16 @@ import { CreateReservationDTO } from './dto/create-reservation.dto';
 import { Reservation } from './reservation.entity';
 import { FindCheckHelper } from '../shared/find-check.helper';
 import { Movie } from '../movie/movie.entity';
+import { MailService } from '../mail/mail.service';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Controller('reservation')
 export class ReservationController {
     constructor(
         private readonly reservationService: ReservationService,
         private readonly findCheckHelper: FindCheckHelper,
+        @InjectQueue('reservations') private readonly reservationsQueue: Queue,
     ) {}
 
     @UseGuards(JwtAuthGuard)
@@ -53,7 +57,13 @@ export class ReservationController {
 
         await this.checkStockMovies(reservation);
 
-        return await this.reservationService.save(reservation);
+        const reservationCreated = await this.reservationService.save(
+            reservation,
+        );
+
+        this.reservationsQueue.add('new-reservation', reservationCreated);
+
+        return reservationCreated;
     }
 
     async findAndCheckMovies(ids: Array<string>) {
