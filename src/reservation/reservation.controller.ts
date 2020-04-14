@@ -60,7 +60,12 @@ export class ReservationController {
         const movies = new Array<Movie>();
 
         for (let i = 0; i < ids.length; i++) {
-            movies.push(await this.findCheckHelper.findAndCheckMovie(ids[i]));
+            movies.push(
+                await this.findCheckHelper.findAndCheckMovie(
+                    ids[i],
+                    'Movie not found',
+                ),
+            );
         }
 
         return movies;
