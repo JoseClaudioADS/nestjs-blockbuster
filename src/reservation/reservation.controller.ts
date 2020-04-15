@@ -20,6 +20,7 @@ import { Movie } from '../movie/movie.entity';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { SearchReservationDTO } from './dto/search-reservation.dto';
+import { ReservationsEventsGateway } from './events/reservations-events.gateway';
 
 @Controller('reservation')
 export class ReservationController {
@@ -27,6 +28,7 @@ export class ReservationController {
         private readonly reservationService: ReservationService,
         private readonly findCheckHelper: FindCheckHelper,
         @InjectQueue('reservations') private readonly reservationsQueue: Queue,
+        private readonly reservationsEventsGateway: ReservationsEventsGateway,
     ) {}
 
     @UseGuards(JwtAuthGuard)
@@ -69,6 +71,15 @@ export class ReservationController {
             reservation,
         );
 
+        this.reservationsEventsGateway.server.emit(
+            `new-reservation-${reservationCreated.client.email}`,
+            reservationCreated,
+        );
+
+        this.reservationsEventsGateway.server.emit(
+            `new-reservation-TERROR`,
+            reservationCreated,
+        );
         this.reservationsQueue.add('new-reservation', reservationCreated);
 
         return reservationCreated;

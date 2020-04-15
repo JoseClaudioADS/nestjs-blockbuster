@@ -7,6 +7,7 @@ import { Reservation } from './reservation.entity';
 import { MailModule } from '../mail/mail.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NewReservationProcessor } from './jobs/new-reservation.processor';
+import { ReservationsEventsGateway } from './events/reservations-events.gateway';
 
 @Module({
     imports: [
@@ -27,6 +28,10 @@ import { NewReservationProcessor } from './jobs/new-reservation.processor';
         }),
     ],
     controllers: [ReservationController],
-    providers: [ReservationService, NewReservationProcessor],
+    providers: [
+        ReservationService,
+        NewReservationProcessor,
+        ReservationsEventsGateway,
+    ],
 })
 export class ReservationModule {}
