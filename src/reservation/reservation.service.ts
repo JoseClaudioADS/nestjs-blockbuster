@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as dayjs from 'dayjs';
 import { Reservation } from './reservation.entity';
 import { Repository, Brackets } from 'typeorm';
 import { SearchReservationDTO } from './dto/search-reservation.dto';
+import { BusinessException } from '../helper/exceptions/business-exception';
 
 @Injectable()
 export class ReservationService {
@@ -43,8 +45,24 @@ export class ReservationService {
         return qb.getManyAndCount();
     }
 
-    save(reservation: Reservation): Promise<Reservation> {
-        return this.reservationRepository.save(reservation);
+    validateStartEndDates(reservation: Reservation) {
+        const { start, end } = reservation;
+
+        const startDay = dayjs(start);
+        const endDay = dayjs(end);
+        const today = dayjs();
+
+        if (startDay.isBefore(today)) {
+            throw new BusinessException('Start date is before today');
+        }
+
+        if (endDay.isBefore(today)) {
+            throw new BusinessException('End date is before today');
+        }
+
+        if (startDay.isAfter(end)) {
+            throw new BusinessException('Start date is after end date');
+        }
     }
 
     findMovieReservations(reservation: Reservation) {
@@ -70,5 +88,30 @@ export class ReservationService {
         qb.addGroupBy('movie.stock');
 
         return qb.getRawMany();
+    }
+
+    async checkStockMovies(reservation: Reservation) {
+        const { movies } = reservation;
+
+        const results = await this.findMovieReservations(reservation);
+
+        if (results && results.length > 0) {
+            movies.forEach(movie => {
+                const result = results.filter(r => r.movie_id === movie.id)[0];
+
+                if (Boolean(result.nonstock)) {
+                    throw new BusinessException(
+                        `Movie ${movie.title} has no stock`,
+                    );
+                }
+            });
+        }
+    }
+
+    async save(reservation: Reservation): Promise<Reservation> {
+        this.validateStartEndDates(reservation);
+        await this.checkStockMovies(reservation);
+
+        return this.reservationRepository.save(reservation);
     }
 }

@@ -10,6 +10,7 @@ import {
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { captureException } from '@sentry/node';
+import { BusinessException } from '../exceptions/business-exception';
 
 @Injectable()
 export class SentryInterceptor implements NestInterceptor {
@@ -18,6 +19,7 @@ export class SentryInterceptor implements NestInterceptor {
             tap(null, exception => {
                 if (
                     !(
+                        exception instanceof BusinessException ||
                         exception instanceof BadRequestException ||
                         exception instanceof UnauthorizedException ||
                         exception instanceof NotFoundException

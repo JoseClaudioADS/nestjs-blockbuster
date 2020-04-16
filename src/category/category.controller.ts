@@ -24,6 +24,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateUpdateCategoryDTO } from './dto/create-update-category.dto';
 import { ValidationExceptionFilter } from '../helper/filter/validation-exception.filter';
 import { Category } from './category.entity';
+import { FindCheckHelper } from '../shared/find-check.helper';
 
 @Controller('category')
 export class CategoryController {
@@ -33,6 +34,7 @@ export class CategoryController {
 
     constructor(
         private categoryService: CategoryService,
+        private findCheckHelper: FindCheckHelper,
         @Inject(CACHE_MANAGER) private cacheManager,
     ) {}
 
@@ -69,7 +71,7 @@ export class CategoryController {
         @Body() updateCategoryDTO: CreateUpdateCategoryDTO,
     ) {
         await this.schemaValidation.validate(updateCategoryDTO);
-        const categoryDb = await this.findAndCheckCategory(id);
+        const categoryDb = await this.findCheckHelper.findAndCheckCategory(id);
         Object.assign(categoryDb, updateCategoryDTO);
 
         this.cacheManager.del('categorias', () => {
@@ -82,17 +84,7 @@ export class CategoryController {
     @UseGuards(JwtAuthGuard)
     @Delete(':id')
     async destroy(@Param('id') id: string) {
-        const categoryDb = await this.findAndCheckCategory(id);
+        const categoryDb = await this.findCheckHelper.findAndCheckCategory(id);
         return await this.categoryService.delete(categoryDb);
-    }
-
-    async findAndCheckCategory(id: string): Promise<Category> {
-        const categoryDb = await this.categoryService.findById(id);
-
-        if (!categoryDb) {
-            throw new NotFoundException();
-        }
-
-        return categoryDb;
     }
 }

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from './client.entity';
 import { Repository, DeleteResult } from 'typeorm';
 import { SearchClientDTO } from './dto/search-client.dto';
+import { BusinessException } from '../helper/exceptions/business-exception';
 
 @Injectable()
 export class ClientService {
@@ -44,7 +45,13 @@ export class ClientService {
         return this.clientRepository.findOne({ where: { email } });
     }
 
-    save(client: Client): Promise<Client> {
+    async save(client: Client): Promise<Client> {
+        const clientDb = await this.findByEmail(client.email);
+
+        if (clientDb && (!client.id || client.id != clientDb.id)) {
+            throw new BusinessException('Email already used by another client');
+        }
+
         return this.clientRepository.save(client);
     }
 

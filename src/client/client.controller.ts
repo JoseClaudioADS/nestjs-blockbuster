@@ -18,7 +18,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateUpdateClientDTO } from './dto/create-update-client.dto';
 import { ValidationExceptionFilter } from '../helper/filter/validation-exception.filter';
 import { Client } from './client.entity';
-import { FileService } from '../file/file.service';
 import { SearchClientDTO } from './dto/search-client.dto';
 import { FindCheckHelper } from '../shared/find-check.helper';
 
@@ -62,7 +61,6 @@ export class ClientController {
             abortEarly: false,
         });
 
-        await this.checkEmail(createClientDTO);
         const photo = await this.findCheckHelper.findAndCheckFile(
             createClientDTO.photoId,
             'Photo not found',
@@ -82,13 +80,12 @@ export class ClientController {
         @Param('id') id: string,
         @Body() createClientDTO: CreateUpdateClientDTO,
     ) {
-        const clientDb = await this.findAndCheckClient(id);
+        const clientDb = await this.findCheckHelper.findAndCheckClient(id);
 
         await this.schemaValidation.validate(createClientDTO, {
             abortEarly: false,
         });
 
-        await this.checkEmail(createClientDTO, id);
         const photo = await this.findCheckHelper.findAndCheckFile(
             createClientDTO.photoId,
             'Photo not found',
@@ -100,32 +97,10 @@ export class ClientController {
         return await this.clientService.save(clientDb);
     }
 
-    async findAndCheckClient(id: string) {
-        const clientDb = await this.clientService.findById(id);
-
-        if (!clientDb) {
-            throw new NotFoundException();
-        }
-
-        return clientDb;
-    }
-
-    async checkEmail(dto: CreateUpdateClientDTO, id?: string) {
-        const { email } = dto;
-
-        const client = await this.clientService.findByEmail(email);
-
-        if (client && (!id || id != client.id)) {
-            throw new BadRequestException({
-                error: 'Email already used by another client',
-            });
-        }
-    }
-
     @UseGuards(JwtAuthGuard)
     @Delete(':id')
     async destroy(@Param('id') id: string) {
-        const clientDb = await this.findAndCheckClient(id);
+        const clientDb = await this.findCheckHelper.findAndCheckClient(id);
 
         return await this.clientService.delete(clientDb);
     }

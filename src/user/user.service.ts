@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from './user.entity';
 import { Repository, Not } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BusinessException } from '../helper/exceptions/business-exception';
 
 @Injectable()
 export class UserService {
@@ -18,18 +19,15 @@ export class UserService {
         return this.userRepository.findOne(id);
     }
 
-    async existsByLoginDiffId(login: string, id: string): Promise<boolean> {
-        const count = await this.userRepository.count({
-            where: {
-                login,
-                id: Not(id),
-            },
-        });
+    async save(user: User): Promise<User> {
+        const userDb = await this.findByLogin(user.login);
 
-        return count > 0;
-    }
+        if (userDb && (!user.id || user.id != userDb.id)) {
+            throw new BusinessException(
+                'Login already used by another account',
+            );
+        }
 
-    save(user: User): Promise<User> {
         return this.userRepository.save(user);
     }
 }
