@@ -37,7 +37,7 @@
         "@nestjs/typeorm": "^7.0.0",
         "@nestjs/websockets": "^7.0.7",
         "@sentry/node": "^5.15.4",
-        "bcrypt": "^4.0.1",
+        "bcrypt": "^5.0.0",
         "bull": "^3.13.0",
         "cache-manager": "^3.2.1",
         "class-transformer": "^0.2.3",
